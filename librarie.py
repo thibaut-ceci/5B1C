@@ -64,6 +64,41 @@ def repair_list_in_df(df1, df2, list_columns):
     return df1, df2
 
 
+def plot_colonnes(df1, df2, colonne, ylabel, plot_games = True):
+    plt.figure(figsize=(10, 6), dpi=150)
+
+    ## Boucle sur toutes le dataframe pour les victoires
+    if plot_games == True:
+        for index_game, _ in df1.iterrows():
+            plt.plot(df1["Temps numérique"][index_game], df1[colonne][index_game], marker='o', label="Game de " + str(df1["Nom du joueur"][index_game]), color="green")
+
+        ## Boucle sur toutes le dataframe pour les défaites
+        for index_game, _ in df2.iterrows():
+            plt.plot(df2["Temps numérique"][index_game], df2[colonne][index_game], marker='o', label="Game de " + str(df2["Nom du joueur"][index_game]), color="red")
+
+    moyennes(df1, plt, colonne, label="moyenne victoire", color="green")
+    moyennes(df2, plt, colonne, label="moyenne défaite", color="red")
+
+    zone(df1, colonne, label='Zone de victoire', color='green')
+    zone(df2, colonne, label='Zone de défaite', color='red')
+
+    plt.title('Évolution des kills au cours des parties')
+    plt.xlabel('Temps (minutes)')
+    plt.ylabel(ylabel)
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+
+
+
+
+
 def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green"):
 
     colonne0 = []
