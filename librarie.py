@@ -64,43 +64,14 @@ def repair_list_in_df(df1, df2, list_columns):
     return df1, df2
 
 
-def plot_colonnes(df1, df2, colonne, ylabel, plot_games = True):
-    plt.figure(figsize=(10, 6), dpi=150)
 
-    ## Boucle sur toutes le dataframe pour les victoires
-    if plot_games == True:
-        for index_game, _ in df1.iterrows():
-            plt.plot(df1["Temps numérique"][index_game], df1[colonne][index_game], marker='o', label="Game de " + str(df1["Nom du joueur"][index_game]), color="green")
-
-        ## Boucle sur toutes le dataframe pour les défaites
-        for index_game, _ in df2.iterrows():
-            plt.plot(df2["Temps numérique"][index_game], df2[colonne][index_game], marker='o', label="Game de " + str(df2["Nom du joueur"][index_game]), color="red")
-
-    moyennes(df1, plt, colonne, label="moyenne victoire", color="green")
-    moyennes(df2, plt, colonne, label="moyenne défaite", color="red")
-
-    zone(df1, colonne, label='Zone de victoire', color='green')
-    zone(df2, colonne, label='Zone de défaite', color='red')
-
-    plt.title('Évolution des kills au cours des parties')
-    plt.xlabel('Temps (minutes)')
-    plt.ylabel(ylabel)
-    plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
-    plt.grid()
-
-    plt.tight_layout()
-    plt.show()
+############
 
 
 
+def remove_column_with_one_value(DATAFRAME, ligne):
 
-
-
-
-
-
-def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green"):
-
+    ## Initialisation de plusieurs listes vides pour stocker les données des différentes colonnes du DATAFRAME
     colonne0 = []
     colonne230 = []
     colonne5 = []
@@ -115,6 +86,7 @@ def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green")
     colonne273 = []
     colonne30 = []
 
+    ## Boucle sur les données de la ligne spécifiée du DATAFRAME
     for game in DATAFRAME[ligne]:
         try:
             colonne0.append(game[0])
@@ -131,15 +103,15 @@ def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green")
             colonne273.append(game[11])
             colonne30.append(game[12])
         except IndexError:
-            #("Pas de kill")
             continue
 
+    ## Détermination de la longueur maximale parmi toutes les listes
     max_length = max(len(colonne0), len(colonne230), len(colonne5), len(colonne730),
                     len(colonne10), len(colonne123), len(colonne15), len(colonne173),
                     len(colonne20), len(colonne223), len(colonne25), len(colonne273),
                     len(colonne30))
 
-    # Compléter les listes avec des NaN jusqu'à la longueur maximale
+    ## Compléter les listes avec des NaN jusqu'à la longueur maximale
     colonne0 += [np.nan] * (max_length - len(colonne0))
     colonne230 += [np.nan] * (max_length - len(colonne230))
     colonne5 += [np.nan] * (max_length - len(colonne5))
@@ -154,6 +126,7 @@ def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green")
     colonne273 += [np.nan] * (max_length - len(colonne273))
     colonne30 += [np.nan] * (max_length - len(colonne30))
 
+    ## Créer un nouveau dataframe à partir des listes précédentes
     data = {
         'Colonne 0': colonne0,
         'Colonne 230': colonne230,
@@ -170,41 +143,123 @@ def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green")
         'Colonne 30': colonne30,
     }
 
-    # Créer le DataFrame
     df = pd.DataFrame(data)
 
+    ## Supprimer les colonnes contenant une seule valeur unique ou plus de NaN que de valeurs non-NaN
     for column_name, _ in df.items():
-        if column_name == "Colonne 0":
+        if column_name == "Colonne 0" or column_name == "Colonne 230" or column_name == "Colonne 5" or column_name == "Colonne 730" or column_name == "Colonne 10" or column_name == "Colonne 123" or column_name == "Colonne 15":
             continue
 
-        if df[column_name].nunique() == 1:
-            #print("Colonne supprimée", column_name)
+        nb_nan = df[column_name].isna().sum() ## Compter le nombre de NaN dans une colonne
+        nb_true_or_num = df[column_name].notna().sum() - df[column_name].isin([False]).sum() ## Compter le nombre de valeur non NaN dans la colonne
+
+        if df[column_name].nunique() == 1 or nb_nan > nb_true_or_num:
+            print("Colonne supprimée", column_name)
             df = df.drop(columns=column_name)
 
+    return df
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, plot_games = True, plot_zones = True):
+    plt.figure(figsize=(10, 6), dpi=150)
+
+    ## Boucle sur toutes le dataframe pour les victoires
+    if plot_games == True:
+        for index_game, _ in df1.iterrows():
+            plt.plot(df1[colonneX][index_game], df1[colonneY][index_game], marker='o', label="Game de " + str(df1["Nom du joueur"][index_game]), color="green")
+
+        # Boucle sur toutes le dataframe pour les défaites
+        for index_game, _ in df2.iterrows():
+            plt.plot(df2[colonneX][index_game], df2[colonneY][index_game], marker='o', label="Game de " + str(df2["Nom du joueur"][index_game]), color="red")
+
+    try:
+        df_with_mean_y_vict = moyennes(df1, plt, colonneY, label="Moyenne victoire", color="green")
+        df_with_mean_y_defa = moyennes(df2, plt, colonneY, label="Moyenne défaite", color="red")
+    except TypeError:
+        moyenne(df1, colonneX, label = "moyenne victoire", color = "green")
+        moyenne(df2, colonneX, label = "moyenne defaite", color = "red")
+    
+    if plot_zones == True:
+        try:    
+            zone(df1, colonneY, label='Zone de victoire', color='green')
+            zone(df2, colonneY, label='Zone de défaite', color='red')
+        except (TypeError, ValueError):
+            print("Impossible d'afficher les zones !!")
+
+    plt.title(title)
+    plt.xlabel('Temps (minutes)')
+    plt.ylabel(ylabel)
+    plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+
+    # return df_with_mean_y_defa
+
+
+
+
+
+def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green"):
+
+    df = remove_column_with_one_value(DATAFRAME, ligne)
 
     taille = df.shape[1]
-    taille
 
-    result_all_x = []
     result_all_y = []
 
     for index_game, _ in df.iterrows():
-        result_all_x.append(DATAFRAME["Temps numérique"][index_game])
         result_all_y.append(df.iloc[index_game])
 
-    df_x = pd.DataFrame.from_records(result_all_x)
     df_y = pd.DataFrame.from_records(result_all_y)
-
-    mean_row_x = pd.DataFrame([df_x.mean()], columns=df_x.columns)
     mean_row_y = pd.DataFrame([df_y.mean()], columns=df_y.columns)
-
-    df_with_mean_x = pd.concat([df_x, mean_row_x], ignore_index=True)
     df_with_mean_y = pd.concat([df_y, mean_row_y], ignore_index=True)
 
-    axe.plot(df_with_mean_x.iloc[-1][:taille], df_with_mean_y.iloc[-1][:taille], marker='o', linestyle='--', label=label, color=color)
+    espace = np.arange(0, 32.5, 2.5)
+    
+    axe.plot(espace[:taille], df_with_mean_y.iloc[-1][:taille], marker='o', linestyle='--', label=label, color=color)
 
-
+    return df_with_mean_y
 
 
 
@@ -227,6 +282,9 @@ def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green")
 
 
 def moyenne(DATAFRAME, ligne, label = "moyenne victoire", color = "green"):
+    
+    
+    
     result_all = []
 
     for index_game, _ in DATAFRAME.iterrows():
@@ -248,17 +306,18 @@ def moyenne(DATAFRAME, ligne, label = "moyenne victoire", color = "green"):
 
 
 def zone(victoire, ligne, label='Zone de victoire', color='green'):
+
+    victoire = remove_column_with_one_value(victoire, ligne)
     
-    max_length = max(len(lst) for lst in victoire[ligne])
-    max_per_column = [max(lst[i] for lst in victoire[ligne] if i < len(lst)) for i in range(max_length)]
+    # Calcul des valeurs maximum et minimum par colonne (ignorer NaN)
+    max_per_column = victoire.max(skipna=True).values
+    min_per_column = victoire.min(skipna=True).values
 
-    max_length = max(len(lst) for lst in victoire[ligne])
-    min_per_column = [min(lst[i] for lst in victoire[ligne] if i < len(lst)) for i in range(max_length)]
+    # Espace sur l'axe x (génération d'un espace équidistant en fonction du nombre de colonnes)
+    espace = np.arange(0, len(max_per_column) * 2.5, 2.5)
 
-    espace = np.arange(0, 32.5, 2.5)
-
-    # Remplir les zones entre les courbes 
-    plt.fill_between(espace, min_per_column, max_per_column,color=color, alpha=0.1,label=label)
+    # Remplir les zones entre les courbes
+    plt.fill_between(espace, min_per_column, max_per_column, color='lightblue', alpha=0.6, label='Zone de victoire')
 
 
 
