@@ -154,7 +154,7 @@ def remove_column_with_one_value(DATAFRAME, ligne):
         nb_true_or_num = df[column_name].notna().sum() - df[column_name].isin([False]).sum() ## Compter le nombre de valeur non NaN dans la colonne
 
         if df[column_name].nunique() == 1 or nb_nan > nb_true_or_num:
-            print("Colonne supprimée", column_name)
+            # print("Colonne supprimée", column_name)
             df = df.drop(columns=column_name)
 
     return df
@@ -171,35 +171,7 @@ def remove_column_with_one_value(DATAFRAME, ligne):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, plot_games = True, plot_zones = True):
+def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, plot_games = True, plot_zones = True, plot_xlim = False):
     plt.figure(figsize=(10, 6), dpi=150)
 
     ## Boucle sur toutes le dataframe pour les victoires
@@ -213,28 +185,37 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, plot_games = True
 
     try:
         df_with_mean_y_vict = moyennes(df1, plt, colonneY, label="Moyenne victoire", color="green")
+        # print("Moyenne victoire :", df_with_mean_y_vict.iloc[-1])
         df_with_mean_y_defa = moyennes(df2, plt, colonneY, label="Moyenne défaite", color="red")
+        # print("Moyenne défaite :", df_with_mean_y_defa.iloc[-1])
     except TypeError:
-        moyenne(df1, colonneX, label = "moyenne victoire", color = "green")
+        df_with_mean_y_vict_4 = moyenne(df1, colonneX, label = "moyenne victoire", color = "green")
         moyenne(df2, colonneX, label = "moyenne defaite", color = "red")
     
     if plot_zones == True:
         try:    
-            zone(df1, colonneY, label='Zone de victoire', color='green')
-            zone(df2, colonneY, label='Zone de défaite', color='red')
+            max_per_column, min_per_column = zone(df1, colonneY, label='Zone de victoire', color='green')
+            _, _ = zone(df2, colonneY, label='Zone de défaite', color='red')
+    
         except (TypeError, ValueError):
             print("Impossible d'afficher les zones !!")
+
 
     plt.title(title)
     plt.xlabel('Temps (minutes)')
     plt.ylabel(ylabel)
     plt.legend(loc='upper left', bbox_to_anchor=(1, 1))
     plt.grid()
+    if plot_xlim == True:
+        plt.xlim(0, 25)
 
     plt.tight_layout()
     plt.show()
 
-    # return df_with_mean_y_defa
+    try:
+        return df_with_mean_y_vict_4
+    except UnboundLocalError:
+        return
 
 
 
@@ -301,39 +282,44 @@ def moyenne(DATAFRAME, ligne, label = "moyenne victoire", color = "green"):
     except:
         plt.plot(df_with_mean.iloc[-1], ['Botte','1er item','2nd item','3ème item','4ème item','5ème item'], marker='o', linestyle='--', label = label, color = color)
 
-
+    return df_with_mean
 
 
 
 def zone(victoire, ligne, label='Zone de victoire', color='green'):
+    """
+    Trace une zone transparente et colorée entre les valeurs minimum et maximum de chaque colonne dans un dataframe.
 
+    Entrée:
+    -------
+    victoire : pandas.DataFrame
+        Dataframe contenant les données à analyser.
+    ligne : int
+        Ligne du dataframe à utiliser pour filtrer les colonnes avec des valeurs uniques.
+    label : str
+        Légende pour la zone ombrée.
+    color : str
+        Couleur de la zone.
+    
+    Sortie:
+    -------
+    max_per_column : list
+        Contient les valeurs maximales pour chaque colonne.
+    min_per_column : list
+        Contient les valeurs minimales pour chaque colonne.
+    """
+
+    ## Supprimer les colonnes ne contenant qu'une seule valeur
     victoire = remove_column_with_one_value(victoire, ligne)
     
-    # Calcul des valeurs maximum et minimum par colonne (ignorer NaN)
-    max_per_column = victoire.max(skipna=True).values
-    min_per_column = victoire.min(skipna=True).values
+    ## Calculer les valeurs maximum et minimum par colonne
+    max_par_colonne = victoire.max(skipna=True).values
+    min_par_colonne = victoire.min(skipna=True).values
 
-    # Espace sur l'axe x (génération d'un espace équidistant en fonction du nombre de colonnes)
-    espace = np.arange(0, len(max_per_column) * 2.5, 2.5)
+    ## Espace sur l'axe x ou définir la zone
+    espace = np.arange(0, len(max_par_colonne) * 2.5, 2.5)
 
-    # Remplir les zones entre les courbes
-    plt.fill_between(espace, min_per_column, max_per_column, color='lightblue', alpha=0.6, label='Zone de victoire')
+    ## Création de la zone
+    plt.fill_between(espace, min_par_colonne, max_par_colonne, color=color, alpha=0.2, label=label)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return max_par_colonne, min_par_colonne
