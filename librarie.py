@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+import warnings
+
+
 def display_parameters(pd):
     """
     Affiche toutes les colonnes et lignes du DataFrame.
@@ -160,8 +163,24 @@ def remove_column_with_one_value(DATAFRAME, ligne):
     return df
 
 
+def cs_min(df_with_mean_y_vict_4):
 
 
+    ## Supprimer des avertissements
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+
+    time = np.arange(0, 25, 2.5)
+
+    all_cs_min = []
+
+    for i, _ in enumerate(df_with_mean_y_vict_4.iloc[-1]):
+        cs_min = df_with_mean_y_vict_4.iloc[-1][i]/time[i]
+        # print(cs_min)
+        all_cs_min.append(cs_min)
+
+    return np.nanmean(all_cs_min)
 
 
 
@@ -190,7 +209,7 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, plot_games = True
         # print("Moyenne défaite :", df_with_mean_y_defa.iloc[-1])
     except TypeError:
         df_with_mean_y_vict_4 = moyenne(df1, colonneX, label = "moyenne victoire", color = "green")
-        moyenne(df2, colonneX, label = "moyenne defaite", color = "red")
+        df_with_mean_y_defa_4 = moyenne(df2, colonneX, label = "moyenne defaite", color = "red")
     
     if plot_zones == True:
         try:    
@@ -213,9 +232,10 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, plot_games = True
     plt.show()
 
     try:
-        return df_with_mean_y_vict_4
+        return df_with_mean_y_vict_4, df_with_mean_y_defa_4
     except UnboundLocalError:
-        return
+        # print("error")
+        return df_with_mean_y_vict, df_with_mean_y_defa
 
 
 
