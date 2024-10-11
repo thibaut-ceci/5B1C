@@ -41,7 +41,7 @@ def convert_to_list(broken_list):
         return broken_list
 
 
-def repair_list_in_df(df1, df2, list_columns):
+def repair_df(df1, df2, list_columns):
     """
     Répare les colonnes spécifiées dans deux dataframes en les convertissant en liste.
     
@@ -51,6 +51,8 @@ def repair_list_in_df(df1, df2, list_columns):
         Premier dataframe à traiter.
     df2 : pandas.DataFrame
         Deuxième dataframe à traiter.
+    list_columns : list
+        Liste des colonnes à traiter.
     
     Sortie :
     --------
@@ -190,34 +192,46 @@ def cs_min(df_with_mean_y_vict_4):
 
 
 
-def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, plot_games = True, plot_zones = True, plot_xlim = False):
+def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, remove_column_with_one_value_bool, plot_games = True, plot_zones = True, plot_xlim = False):
+
+
+
+
+
+
+
+
     plt.figure(figsize=(10, 6), dpi=150)
 
-    ## Boucle sur toutes le dataframe pour les victoires
+    ## Affiche les parties
     if plot_games == True:
+        ## Boucle sur tous le dataframe pour les victoires
         for index_game, _ in df1.iterrows():
             plt.plot(df1[colonneX][index_game], df1[colonneY][index_game], marker='o', label="Game de " + str(df1["Nom du joueur"][index_game]), color="green")
 
-        # Boucle sur toutes le dataframe pour les défaites
+        ## Boucle sur tous le dataframe pour les défaites
         for index_game, _ in df2.iterrows():
             plt.plot(df2[colonneX][index_game], df2[colonneY][index_game], marker='o', label="Game de " + str(df2["Nom du joueur"][index_game]), color="red")
 
+    ## Affiche les moyennes
     try:
         df_with_mean_y_vict = moyennes(df1, plt, colonneY, label="Moyenne victoire", color="green")
-        # print("Moyenne victoire :", df_with_mean_y_vict.iloc[-1])
         df_with_mean_y_defa = moyennes(df2, plt, colonneY, label="Moyenne défaite", color="red")
-        # print("Moyenne défaite :", df_with_mean_y_defa.iloc[-1])
+    
+    ## Utiliser l'autre code pour afficher les temps d'obtention des objets au cours des parties
     except TypeError:
         df_with_mean_y_vict_4 = moyenne(df1, colonneX, label = "moyenne victoire", color = "green")
         df_with_mean_y_defa_4 = moyenne(df2, colonneX, label = "moyenne defaite", color = "red")
     
+    ## Afficher les zones au lieu des parties
     if plot_zones == True:
         try:    
-            max_per_column, min_per_column = zone(df1, colonneY, label='Zone de victoire', color='green')
-            _, _ = zone(df2, colonneY, label='Zone de défaite', color='red')
+            _, _ = zone(df1, colonneY, label='Zone de victoire', color='green', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
+            _, _ = zone(df2, colonneY, label='Zone de défaite', color='red', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
     
         except (TypeError, ValueError):
-            print("Impossible d'afficher les zones !!")
+            _, _ = zone(df1, colonneX, label='Zone de victoire', color='green', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
+            _, _ = zone(df2, colonneX, label='Zone de défaite', color='red', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
 
 
     plt.title(title)
@@ -298,15 +312,15 @@ def moyenne(DATAFRAME, ligne, label = "moyenne victoire", color = "green"):
     df_with_mean = pd.concat([df, mean_row], ignore_index=True)
 
     try:
-        plt.plot(df_with_mean.iloc[-1], ['Botte','1er item','2nd item','3ème item','4ème item','5ème item','6ème item'], marker='o', linestyle='--', label = label, color = color)
+        plt.plot(df_with_mean.iloc[-1], ['Botte','1er objet','2nd objet','3ème objet','4ème objet','5ème objet','6ème objet'], marker='o', linestyle='--', label = label, color = color)
     except:
-        plt.plot(df_with_mean.iloc[-1], ['Botte','1er item','2nd item','3ème item','4ème item','5ème item'], marker='o', linestyle='--', label = label, color = color)
+        plt.plot(df_with_mean.iloc[-1], ['Botte','1er objet','2nd objet','3ème objet','4ème objet','5ème objet'], marker='o', linestyle='--', label = label, color = color)
 
     return df_with_mean
 
 
 
-def zone(victoire, ligne, label='Zone de victoire', color='green'):
+def zone(victoire, ligne, remove_column_with_one_value_bool, label='Zone de victoire', color='green'):
     """
     Trace une zone transparente et colorée entre les valeurs minimum et maximum de chaque colonne dans un dataframe.
 
@@ -330,16 +344,40 @@ def zone(victoire, ligne, label='Zone de victoire', color='green'):
     """
 
     ## Supprimer les colonnes ne contenant qu'une seule valeur
-    victoire = remove_column_with_one_value(victoire, ligne)
     
-    ## Calculer les valeurs maximum et minimum par colonne
-    max_par_colonne = victoire.max(skipna=True).values
-    min_par_colonne = victoire.min(skipna=True).values
+    # print(victoire)
+    if remove_column_with_one_value_bool == False:
+        max_par_colonne = victoire["Temps numérique objets"].max(skipna=True)
+        min_par_colonne = victoire["Temps numérique objets"].min(skipna=True)
 
-    ## Espace sur l'axe x ou définir la zone
-    espace = np.arange(0, len(max_par_colonne) * 2.5, 2.5)
+        print(min_par_colonne)
+        print(max_par_colonne)
+        ## Espace sur l'axe x ou définir la zone
+        espace = np.arange(0, len(max_par_colonne) * 2.5, 2.5)
 
-    ## Création de la zone
-    plt.fill_between(espace, min_par_colonne, max_par_colonne, color=color, alpha=0.2, label=label)
+        ## Création de la zone
+        plt.fill_betweenx(espace, min_par_colonne[:-1], max_par_colonne)
 
-    return max_par_colonne, min_par_colonne
+        return max_par_colonne, min_par_colonne
+
+
+    else:
+        victoire = remove_column_with_one_value(victoire, ligne)
+        
+        # print(victoire)
+        ## Calculer les valeurs maximum et minimum par colonne
+
+        max_par_colonne = victoire.max(skipna=True).values
+        min_par_colonne = victoire.min(skipna=True).values
+        
+        ## Espace sur l'axe x ou définir la zone
+        espace = np.arange(0, len(max_par_colonne) * 2.5, 2.5)
+
+        ## Création de la zone
+        plt.fill_between(espace, max_par_colonne, min_par_colonne, color=color, alpha=0.2, label=label)
+
+        return max_par_colonne, min_par_colonne
+
+        
+
+ 
