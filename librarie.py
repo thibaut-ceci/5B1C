@@ -1,3 +1,8 @@
+"""
+Librairie crée pour le projet 5B1C.
+De nombreuses fonctions sont disponibles pour réaliser des calculs ou afficher les résultats.
+"""
+
 import ast
 
 import itertools
