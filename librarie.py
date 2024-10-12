@@ -20,7 +20,7 @@ def display_parameters(pd):
 
 def convert_to_list(broken_list):
     """
-    Convertir une chaîne en liste si possible.
+    Convertir une chaîne en liste (si possible).
     
     Entrée :
     --------
@@ -70,12 +70,25 @@ def repair_df(df1, df2, list_columns):
     return df1, df2
 
 
-
-############
-
-
-
 def remove_column_with_one_value(DATAFRAME, ligne):
+    """
+    Cette fonction extrait des colonnes d'un dataframe à partir d'une ligne spécifiée et crée un nouveau dataframe en ajoutant des NaN aux colonnes incomplètes. 
+    Ensuite, elle supprime les colonnes qui contiennent une seule valeur ou qui ont plus de NaN que de valeurs valides.
+
+    Note : cette fonction n'est pas très bien codée et je ne conseille pas de l'utiliser en dehors de cette analyse.
+
+    Entrée :
+    --------
+    DATAFRAME : pandas.DataFrame
+        Le dataframe d'origine contenant les données.
+    ligne : int
+        L'index de la ligne à extraire du dataframe.
+
+    Sortie :
+    --------
+    df : pandas.DataFrame
+        Un nouveau dataframe avec des colonnes supprimées.
+    """
 
     ## Initialisation de plusieurs listes vides pour stocker les données des différentes colonnes du DATAFRAME
     colonne0 = []
@@ -166,41 +179,72 @@ def remove_column_with_one_value(DATAFRAME, ligne):
     return df
 
 
-def cs_min(df_with_mean_y_vict_4):
+def cs_min(df):
+    """
+    Calcule la moyenne du nombre de CS/min.
 
+    Entrée :
+    --------
+    df : pandas.DataFrame
+        Dataframe contenant les données.
+
+    Sortie :
+    --------
+    float
+        Le nombre de CS/min.
+    """
 
     ## Supprimer des avertissements
     warnings.filterwarnings("ignore", category=FutureWarning)
     warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-
+    ## Générer le temps pour calculer le nombre de CS/min
     time = np.arange(0, 25, 2.5)
 
+    ## Calcul du nombre de CS/min toutes les 2 minutes 30
     all_cs_min = []
 
-    for i, _ in enumerate(df_with_mean_y_vict_4.iloc[-1]):
-        cs_min = df_with_mean_y_vict_4.iloc[-1][i]/time[i]
-        # print(cs_min)
+    for i, _ in enumerate(df.iloc[-1]):
+        cs_min = df.iloc[-1][i]/time[i]
         all_cs_min.append(cs_min)
 
+    ## Calcul la moyenne du nombre de CS/min
     return np.nanmean(all_cs_min)
 
 
+def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, zone_objet, plot_games = True, plot_zones = True, plot_xlim = False):
+    """
+    Trace un graphique comparant les données des catalogues des parties gagnantes et perdantes. Les parties peuvent être affichées.
+    Les zones de victoires et défaites sont affichées ainsi que leur moyenne.
 
+    Entrée :
+    --------
+    df1 : pandas.DataFrame
+        Le catalogue avec les parties gagnées
+    df2 : pandas.DataFrame
+        Le catalogue avec les parties perdues
+    colonneX : str
+        Nom de la colonne pour l'axe des X (exemple, le temps numérique).
+    colonneY : str
+        Nom de la colonne pour l'axe des Y (exemple, le nombre de kill).
+    ylabel : str
+        Titre de l'axe des Y.
+    title : str
+        Titre du graphique.
+    zone_objet : bool
+        Indique s'il faut supprimer les colonnes contenant une seule valeur unique lors du calcul des zones.
+    plot_games : bool
+        Indique si les résultats des parties doivent être affichés.
+    plot_zones : bool
+        Indique si les zones de victoires/défaites doivent être affichées.
+    plot_xlim : bool
+        Indique si la limite des axes X doit être ajustée à [0, 25].
 
-
-
-
-
-
-def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, remove_column_with_one_value_bool, plot_games = True, plot_zones = True, plot_xlim = False):
-
-
-
-
-
-
-
+    Sortie :
+    --------
+    df_with_mean_y_vict_4, df_with_mean_y_defa_4 : pandas.DataFrame
+        Les moyennes calculées pour les parties gagnées et perdues.
+    """
 
     plt.figure(figsize=(10, 6), dpi=150)
 
@@ -219,7 +263,7 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, remove_column_wit
         df_with_mean_y_vict = moyennes(df1, plt, colonneY, label="Moyenne victoire", color="green")
         df_with_mean_y_defa = moyennes(df2, plt, colonneY, label="Moyenne défaite", color="red")
     
-    ## Utiliser l'autre code pour afficher les temps d'obtention des objets au cours des parties
+    ## Afficher les temps d'obtention des objets au cours des parties
     except TypeError:
         df_with_mean_y_vict_4 = moyenne(df1, colonneX, label = "Moyenne victoire", color = "green")
         df_with_mean_y_defa_4 = moyenne(df2, colonneX, label = "Moyenne defaite", color = "red")
@@ -227,12 +271,12 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, remove_column_wit
     ## Afficher les zones au lieu des parties
     if plot_zones == True:
         try:    
-            _, _ = zone(df1, colonneY, label='Zone de victoire', color='green', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
-            _, _ = zone(df2, colonneY, label='Zone de défaite', color='red', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
+            _, _ = zone(df1, colonneY, label='Zone de victoire', color='green', zone_objet = zone_objet)
+            _, _ = zone(df2, colonneY, label='Zone de défaite', color='red', zone_objet = zone_objet)
     
         except (TypeError, ValueError):
-            _, _ = zone(df1, colonneX, label='Zone de victoire', color='green', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
-            _, _ = zone(df2, colonneX, label='Zone de défaite', color='red', remove_column_with_one_value_bool = remove_column_with_one_value_bool)
+            _, _ = zone(df1, colonneX, label='Zone de victoire', color='green', zone_objet = zone_objet)
+            _, _ = zone(df2, colonneX, label='Zone de défaite', color='red', zone_objet = zone_objet)
 
 
     plt.title(title)
@@ -253,65 +297,86 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, remove_column_wit
         return df_with_mean_y_vict, df_with_mean_y_defa
 
 
-
-
-
 def moyennes(DATAFRAME, axe, ligne, label = "Moyenne victoire", color = "green"):
+    """
+    Calcule et trace la moyenne des valeurs sur une ligne spécifique du dataframe, en supprimant les colonnes contenant une seule valeur unique. 
 
+    Entrée :
+    --------
+    DATAFRAME : pandas.DataFrame
+        Le dataframe contenant les données à analyser.
+    axe : matplotlib.Axes
+        L'axe sur lequel tracer le graphique.
+    ligne : str
+        La ligne spécifique à analyser dans le dataframe.
+    label : str
+        L'étiquette pour la légende.
+    color : str
+        La couleur du tracé.
+
+    Sortie :
+    --------
+    df_with_mean_y : pandas.DataFrame
+        Un dataframe contenant les valeurs originales suivies des moyennes pour chaque colonne.
+    """
+
+    ## Supprimer les colonnes avec une seule valeur
     df = remove_column_with_one_value(DATAFRAME, ligne)
 
+    ## Compter le nombre de colonnes restantes
     taille = df.shape[1]
 
+    ## Boucle sur chaque ligne pour collecter les valeurs de la ligne spécifiée
     result_all_y = []
-
     for index_game, _ in df.iterrows():
         result_all_y.append(df.iloc[index_game])
 
+    ## Création d'un nouveau dataframe avec les résultats et calcul de la moyenne de chaque colonne
     df_y = pd.DataFrame.from_records(result_all_y)
     mean_row_y = pd.DataFrame([df_y.mean()], columns=df_y.columns)
     df_with_mean_y = pd.concat([df_y, mean_row_y], ignore_index=True)
 
+    ## Création d'un espace pour tracer la moyenne
     espace = np.arange(0, 32.5, 2.5)
     
+    ## Afficher la moyenne
     axe.plot(espace[:taille], df_with_mean_y.iloc[-1][:taille], marker='o', linestyle='--', label=label, color=color)
 
     return df_with_mean_y
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def moyenne(DATAFRAME, ligne, label = "Moyenne victoire", color = "green"):
-    
-    
-    
-    result_all = []
+    """
+    Fonctionne presque comme la fonction "moyennes" à l'exception qu'une ligne du dataframe est specifiée ici (à savoir, les objets)
 
+    Entrée :
+    --------
+    DATAFRAME : pandas.DataFrame
+        Le dataframe contenant les données à analyser.
+    ligne : str
+        La ligne spécifique à analyser dans le dataframe.
+    label : str
+        L'étiquette pour la légende.
+    color : str
+        La couleur du tracé.
+
+    Sortie :
+    --------
+    df_with_mean_y : pandas.DataFrame
+        Un dataframe contenant les valeurs originales suivies des moyennes pour chaque colonne.
+    """
+    
+    ## Boucle sur chaque ligne pour collecter les valeurs de la ligne spécifiée
+    result_all = []
     for index_game, _ in DATAFRAME.iterrows():
         result_all.append(DATAFRAME[ligne][index_game])
 
+    ## Création d'un nouveau dataframe avec les résultats et calcul de la moyenne de chaque colonne
     df = pd.DataFrame.from_records(result_all)
-
     mean_row = pd.DataFrame([df.mean()], columns=df.columns)
-
     df_with_mean = pd.concat([df, mean_row], ignore_index=True)
 
+    ## Afficher la moyenne
     try:
         plt.plot(df_with_mean.iloc[-1], ['Botte','1er objet','2nd objet','3ème objet','4ème objet','5ème objet','6ème objet'], marker='o', linestyle='--', label = label, color = color)
     except:
@@ -320,8 +385,7 @@ def moyenne(DATAFRAME, ligne, label = "Moyenne victoire", color = "green"):
     return df_with_mean
 
 
-
-def zone(victoire, ligne, remove_column_with_one_value_bool, label='Zone de victoire', color='green'):
+def zone(victoire, ligne, zone_objet, label='Zone de victoire', color='green'):
     """
     Trace une zone transparente et colorée entre les valeurs minimum et maximum de chaque colonne dans un dataframe.
 
@@ -338,20 +402,18 @@ def zone(victoire, ligne, remove_column_with_one_value_bool, label='Zone de vict
     
     Sortie:
     -------
-    max_per_column : list
+    max_values, max_par_colonne : list
         Contient les valeurs maximales pour chaque colonne.
-    min_per_column : list
+    min_values, min_par_colonne : list
         Contient les valeurs minimales pour chaque colonne.
     """
 
-    ## Supprimer les colonnes ne contenant qu'une seule valeur
-    
-    # print(victoire)
-    if remove_column_with_one_value_bool == False:
+    ## Afficher une zone pour les objets
+    if zone_objet == False:
         max_values = [np.nanmax(column) for column in itertools.zip_longest(*victoire["Temps numérique objets"], fillvalue=np.nan)]
         min_values = [np.nanmin(column) for column in itertools.zip_longest(*victoire["Temps numérique objets"], fillvalue=np.nan)]
         
-        ## Espace sur l'axe x ou définir la zone
+        ## Espace sur l'axe y ou définir la zone
         espace = np.arange(0, len(max_values), 1)
 
         ## Création de la zone
@@ -359,13 +421,12 @@ def zone(victoire, ligne, remove_column_with_one_value_bool, label='Zone de vict
 
         return max_values, min_values
 
-
+    ## Afficher une zone
     else:
+        ## Retirer les colonnes avec une seule valeur
         victoire = remove_column_with_one_value(victoire, ligne)
         
-        # print(victoire)
         ## Calculer les valeurs maximum et minimum par colonne
-
         max_par_colonne = victoire.max(skipna=True).values
         min_par_colonne = victoire.min(skipna=True).values
         
