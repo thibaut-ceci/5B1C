@@ -1,5 +1,6 @@
 import ast
 
+import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -220,8 +221,8 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, remove_column_wit
     
     ## Utiliser l'autre code pour afficher les temps d'obtention des objets au cours des parties
     except TypeError:
-        df_with_mean_y_vict_4 = moyenne(df1, colonneX, label = "moyenne victoire", color = "green")
-        df_with_mean_y_defa_4 = moyenne(df2, colonneX, label = "moyenne defaite", color = "red")
+        df_with_mean_y_vict_4 = moyenne(df1, colonneX, label = "Moyenne victoire", color = "green")
+        df_with_mean_y_defa_4 = moyenne(df2, colonneX, label = "Moyenne defaite", color = "red")
     
     ## Afficher les zones au lieu des parties
     if plot_zones == True:
@@ -255,7 +256,7 @@ def plot_colonnes(df1, df2, colonneX, colonneY, ylabel, title, remove_column_wit
 
 
 
-def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green"):
+def moyennes(DATAFRAME, axe, ligne, label = "Moyenne victoire", color = "green"):
 
     df = remove_column_with_one_value(DATAFRAME, ligne)
 
@@ -296,7 +297,7 @@ def moyennes(DATAFRAME, axe, ligne, label = "moyenne victoire", color = "green")
 
 
 
-def moyenne(DATAFRAME, ligne, label = "moyenne victoire", color = "green"):
+def moyenne(DATAFRAME, ligne, label = "Moyenne victoire", color = "green"):
     
     
     
@@ -347,18 +348,16 @@ def zone(victoire, ligne, remove_column_with_one_value_bool, label='Zone de vict
     
     # print(victoire)
     if remove_column_with_one_value_bool == False:
-        max_par_colonne = victoire["Temps numérique objets"].max(skipna=True)
-        min_par_colonne = victoire["Temps numérique objets"].min(skipna=True)
-
-        print(min_par_colonne)
-        print(max_par_colonne)
+        max_values = [np.nanmax(column) for column in itertools.zip_longest(*victoire["Temps numérique objets"], fillvalue=np.nan)]
+        min_values = [np.nanmin(column) for column in itertools.zip_longest(*victoire["Temps numérique objets"], fillvalue=np.nan)]
+        
         ## Espace sur l'axe x ou définir la zone
-        espace = np.arange(0, len(max_par_colonne) * 2.5, 2.5)
+        espace = np.arange(0, len(max_values), 1)
 
         ## Création de la zone
-        plt.fill_betweenx(espace, min_par_colonne[:-1], max_par_colonne)
+        plt.fill_betweenx(espace, min_values, max_values, color=color, alpha=0.2, label=label)
 
-        return max_par_colonne, min_par_colonne
+        return max_values, min_values
 
 
     else:
